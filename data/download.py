@@ -23,7 +23,7 @@ def shareable_link_to_url(link):
     return base + id
 
 
-def main(args):
+def download(args):
     model = args["model"]  # [TODO] to arg parser
     if model not in MODELS:
         print("Model not found")
@@ -33,14 +33,8 @@ def main(args):
     train_link = model["train"]
     test_link = model["test"]
     train_url = shareable_link_to_url(train_link)
-    print(train_url)
 
     test_url = shareable_link_to_url(test_link)
-    print(test_url)
 
-    gdown.download(
-        train_url, output="data/", quiet=False
-    )
-
-
-print(main({"model": "Model-1"}))
+    gdown.download(train_url, output="data/", quiet=False)
+    gdown.download(test_url, output="data/", quiet=False)

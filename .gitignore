@@ -1,3 +1,5 @@
 env/
 *.tgz
 cloud.yaml
+*/___pycache__/
+*.pyc

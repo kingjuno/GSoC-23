@@ -1,29 +1,29 @@
-import hnet_modules as hn_lite
-from hnet_modules import Conv2d, HNonlin, BatchNorm
+from .hnet_modules import Conv2d, HNonlin, BatchNorm, mean_pool, sum_magnitudes
 import torch.nn.functional as F
 from torch import nn
 import torch
+
 # import sys
 # [TODO] sys.path.append('../')
 
 
 class HNet(nn.Module):
-    ''' Pytorch model class for Rot-Equivariant CNN'''
+    """Pytorch model class for Rot-Equivariant CNN"""
 
     def __init__(self, args):
         super().__init__()
-        '''
+        """
         Initialization function
         Args:
             args: argument variable to be used to initialize values for all the hyperparameters
-        '''
+        """
 
         self.args = args
         self.order = 1
         # NUmber of filters
         self.nf = self.args.n_filters
-        self.nf2 = int(self.nf*self.args.filter_gain)
-        self.nf3 = int(self.nf*(self.args.filter_gain**2.))
+        self.nf2 = int(self.nf * self.args.filter_gain)
+        self.nf3 = int(self.nf * (self.args.filter_gain**2.0))
         self.bs = self.args.batch_size
         self.fs = self.args.filter_size
         self.ncl = self.args.n_classes
@@ -31,24 +31,41 @@ class HNet(nn.Module):
         self.nr = self.args.n_rings
 
         self.bias = torch.ones(self.ncl) * 1e-2
-        self.bias = torch.nn.Parameter(self.bias.type(
-            torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor))
+        self.bias = torch.nn.Parameter(
+            self.bias.type(
+                torch.cuda.FloatTensor
+                if torch.cuda.is_available()
+                else torch.FloatTensor
+            )
+        )
 
         # defining convolutional layer objects
         self.conv2d_1_nf = Conv2d(
-            1, self.nf, self.fs, padding=(self.fs-1)//2, n_rings=self.nr)
+            1, self.nf, self.fs, padding=(self.fs - 1) // 2, n_rings=self.nr
+        )
         self.conv2d_nf_nf = Conv2d(
-            self.nf, self.nf, self.fs, padding=(self.fs-1)//2, n_rings=self.nr)
+            self.nf, self.nf, self.fs, padding=(self.fs - 1) // 2, n_rings=self.nr
+        )
         self.conv2d_nf_nf2 = Conv2d(
-            self.nf, self.nf2, self.fs, padding=(self.fs-1)//2, n_rings=self.nr)
+            self.nf, self.nf2, self.fs, padding=(self.fs - 1) // 2, n_rings=self.nr
+        )
         self.conv2d_nf2_nf2 = Conv2d(
-            self.nf2, self.nf2, self.fs, padding=(self.fs-1)//2, n_rings=self.nr)
+            self.nf2, self.nf2, self.fs, padding=(self.fs - 1) // 2, n_rings=self.nr
+        )
         self.conv2d_nf2_nf3 = Conv2d(
-            self.nf2, self.nf3, self.fs, padding=(self.fs-1)//2, n_rings=self.nr)
+            self.nf2, self.nf3, self.fs, padding=(self.fs - 1) // 2, n_rings=self.nr
+        )
         self.conv2d_nf3_nf3 = Conv2d(
-            self.nf3, self.nf3, self.fs, padding=(self.fs-1)//2, n_rings=self.nr)
-        self.conv2d_nf3_ncl = Conv2d(self.nf3, self.ncl, self.fs, padding=(
-            self.fs-1)//2, n_rings=self.nr, phase=False)
+            self.nf3, self.nf3, self.fs, padding=(self.fs - 1) // 2, n_rings=self.nr
+        )
+        self.conv2d_nf3_ncl = Conv2d(
+            self.nf3,
+            self.ncl,
+            self.fs,
+            padding=(self.fs - 1) // 2,
+            n_rings=self.nr,
+            phase=False,
+        )
 
         # defining the nonliearity objects
         self.nonlin1 = HNonlin(F.relu, self.order, self.nf, eps=1e-12)
@@ -61,7 +78,7 @@ class HNet(nn.Module):
         self.bn6 = BatchNorm(2, 2, 32)
 
     def forward(self, x: torch.FloatTensor):
-        '''
+        """
         Defines the forward propagation for the model
 
         Args:
@@ -69,7 +86,7 @@ class HNet(nn.Module):
             training step.
 
         Returns output activations of the model
-        '''
+        """
 
         x = x.view(self.bs, self.args.dim, self.args.dim, 1, 1, 1)
         # defining block 1
@@ -82,7 +99,7 @@ class HNet(nn.Module):
         cv2 = self.bn2(cv2)
 
         # defining block 2
-        cv2 = hn_lite.mean_pool(cv2, kernel_size=(2, 2), strides=(2, 2))
+        cv2 = mean_pool(cv2, kernel_size=(2, 2), strides=(2, 2))
         cv3 = self.conv2d_nf_nf2(cv2)
         cv3 = self.nonlin3(cv3)
 
@@ -91,7 +108,7 @@ class HNet(nn.Module):
         cv4 = self.bn4(cv4)
 
         # defining block 3
-        cv4 = hn_lite.mean_pool(cv4, kernel_size=(2, 2), strides=(2, 2))
+        cv4 = mean_pool(cv4, kernel_size=(2, 2), strides=(2, 2))
         cv5 = self.conv2d_nf2_nf3(cv4)
         cv5 = self.nonlin5(cv5)
 
@@ -101,6 +118,6 @@ class HNet(nn.Module):
 
         # defining the final  block
         cv7 = self.conv2d_nf3_ncl(cv6)
-        real = hn_lite.sum_magnitudes(cv7)
+        real = sum_magnitudes(cv7)
         cv7 = torch.mean(real, dim=(1, 2, 3, 4))
-        return (cv7 + self.bias.view(1, -1))
+        return cv7 + self.bias.view(1, -1)
