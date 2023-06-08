@@ -3,8 +3,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from hnet_ops import *
-from hnet_ops import h_conv
+from .hnet_ops import *
+from .hnet_ops import h_conv
 
 
 class Conv2d(nn.Module):
