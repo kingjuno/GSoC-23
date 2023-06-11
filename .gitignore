@@ -1,6 +1,6 @@
 env/
 *.tgz
-cloud.yaml
+kubefiles/*
 */___pycache__/
 *.pyc
 data/*
