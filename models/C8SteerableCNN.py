@@ -1,5 +1,7 @@
 import torch
-import e2cnn.nn as e2nn
+from e2cnn import gspaces
+from e2cnn import nn as e2nn
+
 class C8SteerableCNN(torch.nn.Module):
     
     def __init__(self, n_classes=3):
