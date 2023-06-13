@@ -4,3 +4,4 @@ kubefiles/*
 */___pycache__/
 *.pyc
 data/*
+*.pth
