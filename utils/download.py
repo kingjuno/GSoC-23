@@ -13,7 +13,14 @@ MODELS = {
         "train": "https://drive.google.com/file/d/1ynKMJoEeKKJqLfuKRR1Y7rQjeBMM0w94/view?usp=sharing",
         "test": "https://drive.google.com/file/d/18BuCv40t6qmiNnhjJF1y9rqSBhBOfDon/view?usp=sharing",
     },
-    "Model-4": {},
+    "Model-4": {
+        "train": "https://drive.google.com/file/d/1vGkfEgEiapZoHUt1E6Tlhi-hKJ7dF2Ke/view?usp=sharing",
+        "test": None,
+    },
+    "Model-5": {
+        "train": "https://drive.google.com/file/d/1-eG5Y2ETDFPP_lwjkoxzRGZC7bm0rtCK/view?usp=sharing",
+        "test": None
+    },
 }
 
 
@@ -31,10 +38,10 @@ def download(args):
 
     model = MODELS[model]
     train_link = model["train"]
-    test_link = model["test"]
     train_url = shareable_link_to_url(train_link)
-
-    test_url = shareable_link_to_url(test_link)
-
     gdown.download(train_url, output="data/", quiet=False)
-    gdown.download(test_url, output="data/", quiet=False)
+
+    if model["test"] is not None:
+        test_link = model["test"]
+        test_url = shareable_link_to_url(test_link)
+        gdown.download(test_url, output="data/", quiet=False)
