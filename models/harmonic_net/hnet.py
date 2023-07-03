@@ -87,8 +87,7 @@ class HNet(nn.Module):
 
         Returns output activations of the model
         """
-
-        x = x.view(self.bs, self.args.dim, self.args.dim, 1, 1, 1)
+        x = x.view(x.shape[0], x.shape[2], x.shape[3], 1, 1, 1)
         # defining block 1
         cv1 = self.conv2d_1_nf(x)
         cv1_bcc = cv1.detach().clone()
